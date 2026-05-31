@@ -1,0 +1,23 @@
+# ── OS / Editor ───────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ── Local presentations / outputs (user content) ──
+*.pptx
+*.ppt
+*.pdf
+*.html
+*.htm
+!references/*.html
+
+# ── Temp ──────────────────────────────────────────
+tmp/
+*.tmp
+*.log
+
+# ── Secrets ───────────────────────────────────────
+.env
+*.key
