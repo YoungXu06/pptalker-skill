@@ -167,8 +167,7 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
         "PPTALKER_SUBTITLES": "true",
         "PPTALKER_SUBTITLE_SIZE": "medium",
         "PPTALKER_SUBTITLE_COLOR": "white",
-        "PPTALKER_SUBTITLE_BG": "semi-transparent",
-        "PPTALKER_RESOLUTION": "1.5"
+        "PPTALKER_SUBTITLE_BG": "semi-transparent"
       }
     }
   }
@@ -180,13 +179,12 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 | `PPTALKER_API_KEY` | ✅ | — | 以 `pptk_live_` 开头的 API Key |
 | `PPTALKER_API_BASE` | | `https://api.pptalker.com` | 自建 / 代理时覆盖 API 地址 |
 | `PPTALKER_LANGUAGE` | | `Chinese`（zh-CN） | 友好名（`Chinese`/`English`/`Japanese`…）、短码（`zh`/`en`/`ja`…）或 BCP-47（`zh-CN`/`en-US`/`pt-BR`…），大小写不敏感 |
-| `PPTALKER_VOICE` | | 随语言的默认音色 | 音色名，如 `Matthew`、`智斌`，或你的克隆音色名 |
+| `PPTALKER_VOICE` | | 随语言的默认音色 | PPTalker官网上的音色名，如 `Matthew`、`智斌`，或你的克隆音色名 |
 | `PPTALKER_SPEED` | | `100` | 语速，`80`–`150` |
 | `PPTALKER_SUBTITLES` | | `true` | 是否显示字幕：`true` / `false` |
 | `PPTALKER_SUBTITLE_SIZE` | | `medium` | 字幕字号：`small` / `medium` / `large` |
 | `PPTALKER_SUBTITLE_COLOR` | | `white` | 字幕字体颜色名，如 `white`、`yellow` |
 | `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | 字幕背景：`semi-transparent` / `none` / `solid` |
-| `PPTALKER_RESOLUTION` | | `1.5` | 分辨率缩放，`1.0`–`2.0` |
 
 > 这些只是**默认值**：同一套配置下，仍可在对话里临时改语言 / 音色 / 语速等，渲染时传入的参数会覆盖默认。语言与音色的完整对照见 [SKILL.md](./SKILL.md)。
 

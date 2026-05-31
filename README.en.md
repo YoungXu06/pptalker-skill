@@ -167,8 +167,7 @@ Apart from `PPTALKER_API_KEY`, all variables are **optional defaults** — appli
         "PPTALKER_SUBTITLES": "true",
         "PPTALKER_SUBTITLE_SIZE": "medium",
         "PPTALKER_SUBTITLE_COLOR": "white",
-        "PPTALKER_SUBTITLE_BG": "semi-transparent",
-        "PPTALKER_RESOLUTION": "1.5"
+        "PPTALKER_SUBTITLE_BG": "semi-transparent"
       }
     }
   }
@@ -180,13 +179,12 @@ Apart from `PPTALKER_API_KEY`, all variables are **optional defaults** — appli
 | `PPTALKER_API_KEY` | ✅ | — | API key starting with `pptk_live_` |
 | `PPTALKER_API_BASE` | | `https://api.pptalker.com` | Override the API URL (self-host / proxy) |
 | `PPTALKER_LANGUAGE` | | `Chinese` (zh-CN) | Friendly name (`Chinese`/`English`/`Japanese`…), short code (`zh`/`en`/`ja`…), or BCP-47 (`zh-CN`/`en-US`/`pt-BR`…), case-insensitive |
-| `PPTALKER_VOICE` | | language's default voice | Voice name, e.g. `Matthew`, `智斌`, or your cloned voice name |
+| `PPTALKER_VOICE` | | language's default voice | PPTalker Voice name, e.g. `Matthew`, `智斌`, or your cloned voice name |
 | `PPTALKER_SPEED` | | `100` | Speech speed, `80`–`150` |
 | `PPTALKER_SUBTITLES` | | `true` | Show subtitles: `true` / `false` |
 | `PPTALKER_SUBTITLE_SIZE` | | `medium` | Subtitle size: `small` / `medium` / `large` |
 | `PPTALKER_SUBTITLE_COLOR` | | `white` | Subtitle font color name, e.g. `white`, `yellow` |
 | `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | Subtitle background: `semi-transparent` / `none` / `solid` |
-| `PPTALKER_RESOLUTION` | | `1.5` | Resolution scale, `1.0`–`2.0` |
 
 > These are just **defaults**: with the same config you can still switch language / voice / speed on the fly in chat — parameters passed at render time override the defaults. Full language & voice mapping lives in [SKILL.md](./SKILL.md).
 
