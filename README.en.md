@@ -125,9 +125,17 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ---
 
+## About PPTalker
+
+[**PPTalker**](https://www.pptalker.com) is an online "deck → narrated video in one click" product: upload PPT / PDF / HTML and it auto-adds **lifelike AI voiceover + multilingual subtitles**, rendering a finished video in minutes. It supports **20+ languages, 50+ voices, and voice cloning** — no screen recording, no lip-sync, no editing — ideal for course explainers, product walkthroughs, knowledge content, and short-video creators. This skill simply wires PPTalker's power into your agent, so a single sentence takes you from "slides" to "finished video".
+
+> 🌐 Website https://www.pptalker.com ｜ 🤖 Agent entry https://www.pptalker.com/agents
+
+---
+
 ## Dependency: configure the PPTalker MCP
 
-This skill orchestrates PPTalker's MCP tools. Register the server in your MCP client first:
+This skill orchestrates PPTalker's MCP tools. Register the server in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first. The minimal config needs only an API key:
 
 ```json
 {
@@ -140,6 +148,47 @@ This skill orchestrates PPTalker's MCP tools. Register the server in your MCP cl
   }
 }
 ```
+
+### Configurable system parameters (env)
+
+Apart from `PPTALKER_API_KEY`, all variables are **optional defaults** — applied at render time whenever you don't override them in the conversation. A full example with every parameter:
+
+```json
+{
+  "mcpServers": {
+    "pptalker": {
+      "command": "npx",
+      "args": ["-y", "@pptalker/mcp-server"],
+      "env": {
+        "PPTALKER_API_KEY": "pptk_live_xxxx",
+        "PPTALKER_LANGUAGE": "English",
+        "PPTALKER_VOICE": "Matthew",
+        "PPTALKER_SPEED": "100",
+        "PPTALKER_SUBTITLES": "true",
+        "PPTALKER_SUBTITLE_SIZE": "medium",
+        "PPTALKER_SUBTITLE_COLOR": "white",
+        "PPTALKER_SUBTITLE_BG": "semi-transparent",
+        "PPTALKER_RESOLUTION": "1.5"
+      }
+    }
+  }
+}
+```
+
+| Variable | Required | Default | Accepted values / notes |
+|----------|:--------:|---------|-------------------------|
+| `PPTALKER_API_KEY` | ✅ | — | API key starting with `pptk_live_` |
+| `PPTALKER_API_BASE` | | `https://api.pptalker.com` | Override the API URL (self-host / proxy) |
+| `PPTALKER_LANGUAGE` | | `Chinese` (zh-CN) | Friendly name (`Chinese`/`English`/`Japanese`…), short code (`zh`/`en`/`ja`…), or BCP-47 (`zh-CN`/`en-US`/`pt-BR`…), case-insensitive |
+| `PPTALKER_VOICE` | | language's default voice | Voice name, e.g. `Matthew`, `智斌`, or your cloned voice name |
+| `PPTALKER_SPEED` | | `100` | Speech speed, `80`–`150` |
+| `PPTALKER_SUBTITLES` | | `true` | Show subtitles: `true` / `false` |
+| `PPTALKER_SUBTITLE_SIZE` | | `medium` | Subtitle size: `small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | | `white` | Subtitle font color name, e.g. `white`, `yellow` |
+| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | Subtitle background: `semi-transparent` / `none` / `solid` |
+| `PPTALKER_RESOLUTION` | | `1.5` | Resolution scale, `1.0`–`2.0` |
+
+> These are just **defaults**: with the same config you can still switch language / voice / speed on the fly in chat — parameters passed at render time override the defaults. Full language & voice mapping lives in [SKILL.md](./SKILL.md).
 
 - Get an API key: https://www.pptalker.com/profile
 - Credits & pricing: https://www.pptalker.com/pricing (1 credit = 1 minute of output; upload, parse, and local note generation are free)

@@ -39,7 +39,9 @@ pptalker_get_video_status   poll until done
 
 ## Setup
 
-If MCP tools are missing, instruct the user to add to their MCP client:
+If MCP tools are missing, instruct the user to add to their MCP client. Only
+`PPTALKER_API_KEY` is required; everything else is an optional default applied
+at render time when not overridden in the tool call:
 
 ```json
 {
@@ -47,11 +49,39 @@ If MCP tools are missing, instruct the user to add to their MCP client:
     "pptalker": {
       "command": "npx",
       "args": ["-y", "@pptalker/mcp-server"],
-      "env": { "PPTALKER_API_KEY": "pptk_live_..." }
+      "env": {
+        "PPTALKER_API_KEY": "pptk_live_...",
+        "PPTALKER_LANGUAGE": "Chinese",
+        "PPTALKER_VOICE": "智斌",
+        "PPTALKER_SPEED": "100",
+        "PPTALKER_SUBTITLES": "true",
+        "PPTALKER_SUBTITLE_SIZE": "medium",
+        "PPTALKER_SUBTITLE_COLOR": "white",
+        "PPTALKER_SUBTITLE_BG": "semi-transparent",
+        "PPTALKER_RESOLUTION": "1.5"
+      }
     }
   }
 }
 ```
+
+Supported env vars (defaults override-able per `pptalker_create_video` call):
+
+| Variable | Required | Default | Accepted values |
+|----------|:--------:|---------|-----------------|
+| `PPTALKER_API_KEY` | yes | — | key starting with `pptk_live_` |
+| `PPTALKER_API_BASE` | no | `https://api.pptalker.com` | API URL override (self-host / proxy) |
+| `PPTALKER_LANGUAGE` | no | `Chinese` (zh-CN) | friendly name / short code / BCP-47, case-insensitive |
+| `PPTALKER_VOICE` | no | language default | voice name (`Matthew`, `智斌`, …) or cloned voice name |
+| `PPTALKER_SPEED` | no | `100` | `80`–`150` |
+| `PPTALKER_SUBTITLES` | no | `true` | `true` / `false` |
+| `PPTALKER_SUBTITLE_SIZE` | no | `medium` | `small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | no | `white` | color name (`white`, `yellow`, …) |
+| `PPTALKER_SUBTITLE_BG` | no | `semi-transparent` | `semi-transparent` / `none` / `solid` |
+| `PPTALKER_RESOLUTION` | no | `1.5` | `1.0`–`2.0` |
+
+These set the **defaults**; a `pptalker_create_video` call may still override
+`language` / `voice` / `speed` / `show_subtitles` per render (Step 7).
 
 API keys: https://www.pptalker.com/profile.
 

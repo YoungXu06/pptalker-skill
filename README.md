@@ -125,9 +125,17 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ---
 
+## 关于 PPTalker
+
+[**PPTalker**](https://www.pptalker.com) 是一款「演示文稿一键转配音视频」的在线产品：上传 PPT / PDF / HTML，自动配 **AI 真人级语音 + 多语种字幕**，几分钟出片。支持 **20+ 语言、50+ 音色与声音克隆**，无需录屏、无需对口型、无需剪辑——特别适合课程讲解、产品介绍、知识科普与短视频创作者。本 skill 正是把 PPTalker 的能力接入 Agent，让你一句话完成「幻灯片 → 成片」。
+
+> 🌐 官网 https://www.pptalker.com ｜ 🤖 Agent 入口 https://www.pptalker.com/agents
+
+---
+
 ## 依赖：配置 PPTalker MCP
 
-本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端中注册：
+本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册。最简配置只需一个 API Key：
 
 ```json
 {
@@ -140,6 +148,47 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
   }
 }
 ```
+
+### 可配置的系统参数（env）
+
+除 `PPTALKER_API_KEY` 外其余均为**可选的默认值**——渲染时若未在对话里单独指定，就套用这里的配置。下面是一份带全部参数的完整示例：
+
+```json
+{
+  "mcpServers": {
+    "pptalker": {
+      "command": "npx",
+      "args": ["-y", "@pptalker/mcp-server"],
+      "env": {
+        "PPTALKER_API_KEY": "pptk_live_xxxx",
+        "PPTALKER_LANGUAGE": "Chinese",
+        "PPTALKER_VOICE": "智斌",
+        "PPTALKER_SPEED": "100",
+        "PPTALKER_SUBTITLES": "true",
+        "PPTALKER_SUBTITLE_SIZE": "medium",
+        "PPTALKER_SUBTITLE_COLOR": "white",
+        "PPTALKER_SUBTITLE_BG": "semi-transparent",
+        "PPTALKER_RESOLUTION": "1.5"
+      }
+    }
+  }
+}
+```
+
+| 环境变量 | 必填 | 默认值 | 可选值 / 说明 |
+|---------|:---:|--------|--------------|
+| `PPTALKER_API_KEY` | ✅ | — | 以 `pptk_live_` 开头的 API Key |
+| `PPTALKER_API_BASE` | | `https://api.pptalker.com` | 自建 / 代理时覆盖 API 地址 |
+| `PPTALKER_LANGUAGE` | | `Chinese`（zh-CN） | 友好名（`Chinese`/`English`/`Japanese`…）、短码（`zh`/`en`/`ja`…）或 BCP-47（`zh-CN`/`en-US`/`pt-BR`…），大小写不敏感 |
+| `PPTALKER_VOICE` | | 随语言的默认音色 | 音色名，如 `Matthew`、`智斌`，或你的克隆音色名 |
+| `PPTALKER_SPEED` | | `100` | 语速，`80`–`150` |
+| `PPTALKER_SUBTITLES` | | `true` | 是否显示字幕：`true` / `false` |
+| `PPTALKER_SUBTITLE_SIZE` | | `medium` | 字幕字号：`small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | | `white` | 字幕字体颜色名，如 `white`、`yellow` |
+| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | 字幕背景：`semi-transparent` / `none` / `solid` |
+| `PPTALKER_RESOLUTION` | | `1.5` | 分辨率缩放，`1.0`–`2.0` |
+
+> 这些只是**默认值**：同一套配置下，仍可在对话里临时改语言 / 音色 / 语速等，渲染时传入的参数会覆盖默认。语言与音色的完整对照见 [SKILL.md](./SKILL.md)。
 
 - API Key 申请：https://www.pptalker.com/profile
 - 额度与定价：https://www.pptalker.com/pricing （1 额度 = 1 分钟成片；上传、解析、本地生成讲稿均免费）
