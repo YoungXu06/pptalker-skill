@@ -102,6 +102,9 @@ pptalker_upload_ppt(file_path="/abs/path/to/deck.pptx")
 Supported: `.pptx`, `.ppt`, `.pdf`, `.html`, `.htm`. Returns `request_id`
 and `file_name` — keep both.
 
+> **Upload priority**: When multiple formats exist for the same deck, choose
+> in this order: `.pptx` / `.ppt` > `.pdf` > `.html` / `.htm`
+
 ### 3. Parse
 
 ```
