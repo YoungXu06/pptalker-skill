@@ -162,16 +162,20 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 |---------|:---:|--------|------|
 | `PPTALKER_AGENT_API_BASE` | ✅ | — | `https://api.pptalker.com`，**只填 origin**，不要带 `/api/v1/agent` |
 | `PPTALKER_API_KEY` | ✅ | — | 以 `pptk_live_` 开头的 API Key |
-| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47 代码，如 `zh-CN` / `en-US` / `ja-JP`。**不接受** `Chinese` 这类友好名 |
+| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47（`zh-CN`/`en-US`）或友好名（`Chinese`/`中文`/`English`/`Japanese`…），大小写不敏感 |
 | `PPTALKER_VOICE` | | 随语言取默认 | 音色名称或 ID，如 `智斌`、`Joanna`；也可填你的克隆音色名 |
 | `PPTALKER_SPEED` | | `100` | 语速 `80`–`150`，慢≈85、快≈120 |
-| `PPTALKER_STYLE` | | `clean` | `clean`（白字 + 半透明黑底）/ `bold`（黄字、无底色） |
+| `PPTALKER_SUBTITLES` | | `true` | 是否显示字幕：`true` / `false` |
+| `PPTALKER_SUBTITLE_SIZE` | | `medium` | 字幕字号：`small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | | `white` | 字幕颜色：`white` / `yellow` / `black` / `blue` |
+| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | 字幕背景：`none`（无底）/ `semi-transparent`（半透明黑底）/ `solid`（实心黑底） |
+| `PPTALKER_STYLE` | | `clean` | 快捷预设：`clean`（白字半透明底）/ `bold`（黄字无底）。**显式的字幕参数优先于预设** |
 | `PPTALKER_WAIT_SECONDS` | | `30` | 仅 `wait=true` 时的客户端轮询预算，整数 10–45 |
 | `PPTALKER_OPERATION_SECONDS` | | `180` | 单个新任务预算（上传 + 首次同步解析），整数 10–300 |
 | `PPTALKER_RECOVERY_DIR` | | `~/.pptalker-agent/recovery/v2` | 本地恢复日志目录，填 `off` 关闭 |
 
-> **字幕目前只能通过 `PPTALKER_STYLE` 二选一**：没有独立的字幕开关、字号、颜色或背景变量。
-> 需要"白字带半透明底"用 `clean`，需要"黄字强调"用 `bold`。
+> 字幕四个维度相互独立：想"黄字 + 实心黑底 + 大字号"就同时填三个，不需要被 `PPTALKER_STYLE` 限制。
+> 只想要一个整体感觉时用 `PPTALKER_STYLE` 就够。
 
 > 以上只是**默认值**：同一套配置下仍可在对话里临时改语言 / 音色 / 语速 / 风格，渲染时传入的参数会覆盖默认。
 > 音色完整清单见 [SKILL.md](./SKILL.md)。

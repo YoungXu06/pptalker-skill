@@ -50,6 +50,10 @@ so credits and the video library are shared.
 | `PPTALKER_STYLE` | — | `clean` | `clean` or `bold` |
 | `PPTALKER_VOICE` | — | by language | default voice; standard name/ID, or a cloned voice `name`/`id` |
 | `PPTALKER_SPEED` | — | `100` | default speed, integer 80–150 |
+| `PPTALKER_SUBTITLES` | — | on | show subtitles (`true`/`false`) |
+| `PPTALKER_SUBTITLE_SIZE` | — | `medium` | `small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | — | `white` | `white` / `yellow` / `black` / `blue` |
+| `PPTALKER_SUBTITLE_BG` | — | `semi-transparent` | `none` / `semi-transparent` / `solid` |
 | `PPTALKER_WAIT_SECONDS` | — | `30` | client poll budget when `wait=true`, 10–45 |
 | `PPTALKER_OPERATION_SECONDS` | — | `180` | budget per new task (upload + first parse), 10–300 |
 | `PPTALKER_RECOVERY_DIR` | — | `~/.pptalker-agent/recovery/v2` | local recovery journal, or `off` |

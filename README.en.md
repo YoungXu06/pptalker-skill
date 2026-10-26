@@ -165,17 +165,21 @@ unless you override it in the conversation.
 |----------|:--------:|---------|-------|
 | `PPTALKER_AGENT_API_BASE` | ✅ | — | `https://api.pptalker.com`, **origin only** — do not append `/api/v1/agent` |
 | `PPTALKER_API_KEY` | ✅ | — | API key starting with `pptk_live_` |
-| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47 code, e.g. `zh-CN` / `en-US` / `ja-JP`. Friendly names like `English` are **not** accepted |
+| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47 (`zh-CN` / `en-US`) or a friendly name (`Chinese` / `English` / `Japanese` …), case-insensitive |
 | `PPTALKER_VOICE` | | language's default | Voice name or ID, e.g. `Joanna`, `智斌`, or a cloned voice name |
 | `PPTALKER_SPEED` | | `100` | Speech speed `80`–`150`; ~85 is slow, ~120 is fast |
-| `PPTALKER_STYLE` | | `clean` | `clean` (white text, semi-transparent black background) / `bold` (yellow text, no background) |
+| `PPTALKER_SUBTITLES` | | `true` | Show subtitles: `true` / `false` |
+| `PPTALKER_SUBTITLE_SIZE` | | `medium` | Subtitle size: `small` / `medium` / `large` |
+| `PPTALKER_SUBTITLE_COLOR` | | `white` | Subtitle colour: `white` / `yellow` / `black` / `blue` |
+| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | Subtitle background: `none` / `semi-transparent` / `solid` |
+| `PPTALKER_STYLE` | | `clean` | Shortcut preset: `clean` (white on semi-transparent black) / `bold` (yellow, no background). **Explicit subtitle values win** |
 | `PPTALKER_WAIT_SECONDS` | | `30` | Client poll budget when `wait=true`, integer 10–45 |
 | `PPTALKER_OPERATION_SECONDS` | | `180` | Budget per new task (upload + first synchronous parse), integer 10–300 |
 | `PPTALKER_RECOVERY_DIR` | | `~/.pptalker-agent/recovery/v2` | Local recovery journal; set `off` to disable |
 
-> **Subtitles can only be switched through `PPTALKER_STYLE`** — there are no separate variables for
-> subtitle on/off, size, colour, or background. Use `clean` for white text on a dark band, `bold`
-> for yellow emphasis.
+> The four subtitle dimensions are independent: for "yellow text on solid black at large size"
+> set all three, without being constrained by `PPTALKER_STYLE`. When you only want an overall
+> look, `PPTALKER_STYLE` alone is enough.
 
 > These are only **defaults**: with the same config you can still change language / voice / speed /
 > style in chat — parameters passed at render time override them. Full voice list lives in
