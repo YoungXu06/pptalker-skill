@@ -137,15 +137,18 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ## 依赖：配置 PPTalker MCP
 
-本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册。最简配置只需一个 API Key：
+本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册 `@pptalker/agent`：
 
 ```json
 {
   "mcpServers": {
     "pptalker": {
       "command": "npx",
-      "args": ["-y", "@pptalker/mcp-server"],
-      "env": { "PPTALKER_API_KEY": "pptk_live_..." }
+      "args": ["-y", "@pptalker/agent"],
+      "env": {
+        "PPTALKER_AGENT_API_BASE": "https://api.pptalker.com",
+        "PPTALKER_API_KEY": "pptk_live_..."
+      }
     }
   }
 }
@@ -153,42 +156,25 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ### 可配置的系统参数（env）
 
-除 `PPTALKER_API_KEY` 外其余均为**可选的默认值**——渲染时若未在对话里单独指定，就套用这里的配置。下面是一份带全部参数的完整示例：
+前两项必填，其余都是**可选默认值**——渲染时若未在对话里单独指定，就套用这里的配置。
 
-```json
-{
-  "mcpServers": {
-    "pptalker": {
-      "command": "npx",
-      "args": ["-y", "@pptalker/mcp-server"],
-      "env": {
-        "PPTALKER_API_KEY": "pptk_live_xxxx",
-        "PPTALKER_LANGUAGE": "Chinese",
-        "PPTALKER_VOICE": "智斌",
-        "PPTALKER_SPEED": "100",
-        "PPTALKER_SUBTITLES": "true",
-        "PPTALKER_SUBTITLE_SIZE": "medium",
-        "PPTALKER_SUBTITLE_COLOR": "white",
-        "PPTALKER_SUBTITLE_BG": "semi-transparent"
-      }
-    }
-  }
-}
-```
-
-| 环境变量 | 必填 | 默认值 | 可选值 / 说明 |
-|---------|:---:|--------|--------------|
+| 环境变量 | 必填 | 默认值 | 说明 |
+|---------|:---:|--------|------|
+| `PPTALKER_AGENT_API_BASE` | ✅ | — | `https://api.pptalker.com`，**只填 origin**，不要带 `/api/v1/agent` |
 | `PPTALKER_API_KEY` | ✅ | — | 以 `pptk_live_` 开头的 API Key |
-| `PPTALKER_API_BASE` | | `https://api.pptalker.com` | 自建 / 代理时覆盖 API 地址 |
-| `PPTALKER_LANGUAGE` | | `Chinese`（zh-CN） | 友好名（`Chinese`/`English`/`Japanese`…）、短码（`zh`/`en`/`ja`…）或 BCP-47（`zh-CN`/`en-US`/`pt-BR`…），大小写不敏感 |
-| `PPTALKER_VOICE` | | 随语言的默认音色 | PPTalker官网上的音色名，如 `Matthew`、`智斌`，或你的克隆音色名 |
-| `PPTALKER_SPEED` | | `100` | 语速，`80`–`150` |
-| `PPTALKER_SUBTITLES` | | `true` | 是否显示字幕：`true` / `false` |
-| `PPTALKER_SUBTITLE_SIZE` | | `medium` | 字幕字号：`small` / `medium` / `large` |
-| `PPTALKER_SUBTITLE_COLOR` | | `white` | 字幕字体颜色名，如 `white`、`yellow` |
-| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | 字幕背景：`semi-transparent` / `none` / `solid` |
+| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47 代码，如 `zh-CN` / `en-US` / `ja-JP`。**不接受** `Chinese` 这类友好名 |
+| `PPTALKER_VOICE` | | 随语言取默认 | 音色名称或 ID，如 `智斌`、`Joanna`；也可填你的克隆音色名 |
+| `PPTALKER_SPEED` | | `100` | 语速 `80`–`150`，慢≈85、快≈120 |
+| `PPTALKER_STYLE` | | `clean` | `clean`（白字 + 半透明黑底）/ `bold`（黄字、无底色） |
+| `PPTALKER_WAIT_SECONDS` | | `30` | 仅 `wait=true` 时的客户端轮询预算，整数 10–45 |
+| `PPTALKER_OPERATION_SECONDS` | | `180` | 单个新任务预算（上传 + 首次同步解析），整数 10–300 |
+| `PPTALKER_RECOVERY_DIR` | | `~/.pptalker-agent/recovery/v2` | 本地恢复日志目录，填 `off` 关闭 |
 
-> 这些只是**默认值**：同一套配置下，仍可在对话里临时改语言 / 音色 / 语速等，渲染时传入的参数会覆盖默认。语言与音色的完整对照见 [SKILL.md](./SKILL.md)。
+> **字幕目前只能通过 `PPTALKER_STYLE` 二选一**：没有独立的字幕开关、字号、颜色或背景变量。
+> 需要"白字带半透明底"用 `clean`，需要"黄字强调"用 `bold`。
+
+> 以上只是**默认值**：同一套配置下仍可在对话里临时改语言 / 音色 / 语速 / 风格，渲染时传入的参数会覆盖默认。
+> 音色完整清单见 [SKILL.md](./SKILL.md)。
 
 - API Key 申请：https://www.pptalker.com/profile
 - 额度与定价：https://www.pptalker.com/pricing （1 额度 = 1 分钟成片；上传、解析、本地生成讲稿均免费）

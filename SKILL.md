@@ -48,6 +48,8 @@ so credits and the video library are shared.
 | `PPTALKER_API_KEY` | yes | — | key starting with `pptk_live_` |
 | `PPTALKER_LANGUAGE` | — | `zh-CN` | default narration language |
 | `PPTALKER_STYLE` | — | `clean` | `clean` or `bold` |
+| `PPTALKER_VOICE` | — | by language | default voice; standard name/ID, or a cloned voice `name`/`id` |
+| `PPTALKER_SPEED` | — | `100` | default speed, integer 80–150 |
 | `PPTALKER_WAIT_SECONDS` | — | `30` | client poll budget when `wait=true`, 10–45 |
 | `PPTALKER_OPERATION_SECONDS` | — | `180` | budget per new task (upload + first parse), 10–300 |
 | `PPTALKER_RECOVERY_DIR` | — | `~/.pptalker-agent/recovery/v2` | local recovery journal, or `off` |
@@ -101,6 +103,60 @@ Total narration ≤100,000 characters; ≤80 slides.
 6. **Render** — `pptalker_render({ request_id, notes, notes_confirmed: true, ... })`
    with the **same** id. Never re-upload.
 7. **Deliver** — poll `pptalker_status` until `done`, then give the user `video_url`.
+
+## Voice and speed (do not make the user recite IDs)
+
+**Do not pass `voice` by default** — the backend picks the first voice for `language`.
+If the default works, skip the question entirely.
+
+When the user wants a change:
+
+1. "a male / female voice" → pick the first matching `Gender` from `pptalker_account`
+2. A specific name (智菊, Joanna) → use its `Id`
+3. No preference → keep the default, mention it can be changed
+
+**Chinese voices (8)**
+
+| Name | Id | Gender |
+|---|---|---|
+| 智菊 | `501002` | female (default) |
+| 智斌 | `501000` | male |
+| 爱小静 | `601005` | female |
+| 智小满 | `502004` | female |
+| 爱小耀 | `601006` | male |
+| 智小解 | `502005` | male |
+| 爱小童 | `601015` | boy |
+| 智小虎 | `502007` | boy |
+
+Chinese voices have **no online samples**, so never describe them as "warm", "calm" or "lively" —
+there is no basis for that. State gender and whether it is a child voice only.
+
+Recommended English voices: `Joanna` (female), `Matthew` (male); samples are in the AWS Polly
+voice list. Others: `Danielle`, `Kendra` (female), `Stephen`, `Joey` (male).
+
+### Cloned voices (the user's own voice)
+
+**Max plan only.** `pptalker_account` returns them separately:
+
+```json
+"cloned_voices": [{"id": "cosyvoice-xxxx", "name": "我的声音", "source": "cosyvoice"}]
+```
+
+Pass the `name` or `id` as `voice`; the backend synthesises via CosyVoice.
+Non-Max accounts get error `1010` (`PLAN_REQUIRED`).
+
+Cloned voices are **never** used as a language default — they only apply when named explicitly.
+Otherwise a free account could silently be routed to a clone and hit the plan gate.
+
+**Map speed from words, never ask for numbers**
+
+| User says | `speed` |
+|---|---|
+| slower | `85` |
+| leave it | `100` |
+| faster | `120` |
+
+Above 130 sounds rushed; below 80 stretches the video and therefore the cost.
 
 ## Narration priority (strict order)
 

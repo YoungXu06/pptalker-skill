@@ -139,15 +139,18 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ## Dependency: configure the PPTalker MCP
 
-This skill orchestrates PPTalker's MCP tools. Register the server in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first. The minimal config needs only an API key:
+This skill orchestrates PPTalker's MCP tools. Register `@pptalker/agent` in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first:
 
 ```json
 {
   "mcpServers": {
     "pptalker": {
       "command": "npx",
-      "args": ["-y", "@pptalker/mcp-server"],
-      "env": { "PPTALKER_API_KEY": "pptk_live_..." }
+      "args": ["-y", "@pptalker/agent"],
+      "env": {
+        "PPTALKER_AGENT_API_BASE": "https://api.pptalker.com",
+        "PPTALKER_API_KEY": "pptk_live_..."
+      }
     }
   }
 }
@@ -155,42 +158,28 @@ This skill orchestrates PPTalker's MCP tools. Register the server in your MCP cl
 
 ### Configurable system parameters (env)
 
-Apart from `PPTALKER_API_KEY`, all variables are **optional defaults** — applied at render time whenever you don't override them in the conversation. A full example with every parameter:
+The first two are required; everything else is an **optional default** applied at render time
+unless you override it in the conversation.
 
-```json
-{
-  "mcpServers": {
-    "pptalker": {
-      "command": "npx",
-      "args": ["-y", "@pptalker/mcp-server"],
-      "env": {
-        "PPTALKER_API_KEY": "pptk_live_xxxx",
-        "PPTALKER_LANGUAGE": "English",
-        "PPTALKER_VOICE": "Matthew",
-        "PPTALKER_SPEED": "100",
-        "PPTALKER_SUBTITLES": "true",
-        "PPTALKER_SUBTITLE_SIZE": "medium",
-        "PPTALKER_SUBTITLE_COLOR": "white",
-        "PPTALKER_SUBTITLE_BG": "semi-transparent"
-      }
-    }
-  }
-}
-```
-
-| Variable | Required | Default | Accepted values / notes |
-|----------|:--------:|---------|-------------------------|
+| Variable | Required | Default | Notes |
+|----------|:--------:|---------|-------|
+| `PPTALKER_AGENT_API_BASE` | ✅ | — | `https://api.pptalker.com`, **origin only** — do not append `/api/v1/agent` |
 | `PPTALKER_API_KEY` | ✅ | — | API key starting with `pptk_live_` |
-| `PPTALKER_API_BASE` | | `https://api.pptalker.com` | Override the API URL (self-host / proxy) |
-| `PPTALKER_LANGUAGE` | | `Chinese` (zh-CN) | Friendly name (`Chinese`/`English`/`Japanese`…), short code (`zh`/`en`/`ja`…), or BCP-47 (`zh-CN`/`en-US`/`pt-BR`…), case-insensitive |
-| `PPTALKER_VOICE` | | language's default voice | PPTalker Voice name, e.g. `Matthew`, `智斌`, or your cloned voice name |
-| `PPTALKER_SPEED` | | `100` | Speech speed, `80`–`150` |
-| `PPTALKER_SUBTITLES` | | `true` | Show subtitles: `true` / `false` |
-| `PPTALKER_SUBTITLE_SIZE` | | `medium` | Subtitle size: `small` / `medium` / `large` |
-| `PPTALKER_SUBTITLE_COLOR` | | `white` | Subtitle font color name, e.g. `white`, `yellow` |
-| `PPTALKER_SUBTITLE_BG` | | `semi-transparent` | Subtitle background: `semi-transparent` / `none` / `solid` |
+| `PPTALKER_LANGUAGE` | | `zh-CN` | BCP-47 code, e.g. `zh-CN` / `en-US` / `ja-JP`. Friendly names like `English` are **not** accepted |
+| `PPTALKER_VOICE` | | language's default | Voice name or ID, e.g. `Joanna`, `智斌`, or a cloned voice name |
+| `PPTALKER_SPEED` | | `100` | Speech speed `80`–`150`; ~85 is slow, ~120 is fast |
+| `PPTALKER_STYLE` | | `clean` | `clean` (white text, semi-transparent black background) / `bold` (yellow text, no background) |
+| `PPTALKER_WAIT_SECONDS` | | `30` | Client poll budget when `wait=true`, integer 10–45 |
+| `PPTALKER_OPERATION_SECONDS` | | `180` | Budget per new task (upload + first synchronous parse), integer 10–300 |
+| `PPTALKER_RECOVERY_DIR` | | `~/.pptalker-agent/recovery/v2` | Local recovery journal; set `off` to disable |
 
-> These are just **defaults**: with the same config you can still switch language / voice / speed on the fly in chat — parameters passed at render time override the defaults. Full language & voice mapping lives in [SKILL.md](./SKILL.md).
+> **Subtitles can only be switched through `PPTALKER_STYLE`** — there are no separate variables for
+> subtitle on/off, size, colour, or background. Use `clean` for white text on a dark band, `bold`
+> for yellow emphasis.
+
+> These are only **defaults**: with the same config you can still change language / voice / speed /
+> style in chat — parameters passed at render time override them. Full voice list lives in
+> [SKILL.md](./SKILL.md).
 
 - Get an API key: https://www.pptalker.com/profile
 - Credits & pricing: https://www.pptalker.com/pricing (1 credit = 1 minute of output; upload, parse, and local note generation are free)

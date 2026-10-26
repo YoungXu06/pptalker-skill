@@ -19,8 +19,8 @@
 
 任何改动都不得削弱以下规则；如确需调整，请在 PR 描述里说明理由与影响：
 
-1. **先审后渲** —— 未经用户明确确认 `final_notes`，绝不调用 `pptalker_create_video`。
-2. **渲染超时不重试** —— `create_video` 超时即视为任务已提交，改去轮询 `pptalker_get_video_status`，绝不重复调用（避免重复扣费）。
+1. **先审后渲** —— 未经用户明确确认讲稿，绝不向 `pptalker_render` 传 `notes_confirmed=true`。
+2. **渲染超时不重试** —— `pptalker_render` 超时即视为任务已提交，改去轮询 `pptalker_status`，绝不重复调用（避免重复扣费）。
 3. **重试至多 3 次** —— 任一 MCP 工具失败最多重试 3 次，仍失败即停下报错并询问用户。
 
 ---
