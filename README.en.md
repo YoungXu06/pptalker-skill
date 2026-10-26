@@ -95,17 +95,21 @@ The agent will: upload → parse per-slide content → extract or generate notes
 ## Workflow
 
 ```
-1  Credits    pptalker_get_account        check remaining minutes
-2  Upload     pptalker_upload_ppt         local file → request_id
-3  Parse      pptalker_parse_ppt          → per-slide images, native notes, page count
-4  Resolve    extract / user-provided / local generation  →  final_notes
-5  Generate   (optional) by language / words / tone        professional TTS notes
-6  Voice      pptalker_list_voices        50+ voices (optional)
-7  Render     pptalker_create_video       ⚠️ requires confirmed notes
-8  Poll       pptalker_get_video_status   done → share_url
+1  Credits    pptalker_account         remaining minutes and available voices
+2  Submit     pptalker_render          local file → per-slide previews, native notes, page count
+                                      (the first call parses synchronously)
+3  Resolve    user-provided > native notes > local drafting   → notes[]
+4  Confirm    ⚠️ show every slide, wait for explicit approval
+5  Render     pptalker_render          same request_id + notes_confirmed=true
+6  Poll       pptalker_status          done → video_url
 ```
 
-> **Core safety rule**: never call `pptalker_create_video` until the user explicitly confirms `final_notes`. Full flow in [SKILL.md](./SKILL.md).
+> **Core safety rule**: never pass `notes_confirmed=true` before the user approves the narration.
+> Nothing is charged until then, so reviewing twice costs nothing. Full flow in [SKILL.md](./SKILL.md).
+>
+> The old six tools (`upload_ppt` / `parse_ppt` / `list_voices` / `create_video` / `get_video_status` /
+> `get_account`) are now three: parsing moved into `pptalker_render`, and the voice list into
+> `pptalker_account`.
 
 ---
 
@@ -225,13 +229,13 @@ pptalker-skill/
 ## FAQ
 
 **Q: Rendering hangs / the MCP call timed out?**
-A: A `create_video` timeout is normal (the long task is already submitted server-side). **Do not retry** — poll `pptalker_get_video_status` with the same `request_id`. Re-calling may double-charge credits.
+A: A `create_video` timeout is normal (the long task is already submitted server-side). **Do not retry** — poll `pptalker_status` with the same `request_id`. Re-calling may double-charge credits.
 
 **Q: How are credits counted?**
 A: 1 credit = 1 minute of output. A 10-slide deck ≈ 3–5 min → 3–5 credits. Upload, parse, and local note generation are free.
 
 **Q: Can I change language / voice?**
-A: Yes. Browse 50+ voices with `pptalker_list_voices`, then pass `language` + `voice` at render time; the notes language must match the voice language.
+A: Yes. Browse 50+ voices with `pptalker_account`, then pass `language` + `voice` at render time; the notes language must match the voice language.
 
 More error codes and timeout handling in [references/error-handling.md](./references/error-handling.md).
 

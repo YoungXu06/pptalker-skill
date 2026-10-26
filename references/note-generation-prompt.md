@@ -14,7 +14,7 @@ to get it right on the first try.
 | `{word_cap}`        | `min(words_per_slide * 1.5, 120)`; falls back to `100`        | `100`                    |
 | `{tone}`            | `professional` / `friendly` / `educational` / `sales` / …    | `professional`           |
 | `{background_info}` | One-line user context (audience, key message)                | `(none)`                 |
-| `{total_pages}`     | From `pptalker_parse_ppt`                                    | required                 |
+| `{total_pages}`     | From the prepared result (`pptalker_status`)                 | required                 |
 | `{slide_texts}`     | Per-slide source text from Step 5.2                          | required                 |
 | `{voice_block}`     | Inline expansion: see [Voice block selection](#voice-block-selection) | required           |
 | `{banlist_block}`   | Inline expansion: see [Banlist block selection](#banlist-block-selection) | required        |

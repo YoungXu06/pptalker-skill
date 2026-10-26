@@ -95,17 +95,19 @@ Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 
 ## 工作流
 
 ```
-1  核额度    pptalker_get_account        确认剩余分钟数
-2  上传      pptalker_upload_ppt         本地文件 → request_id
-3  解析      pptalker_parse_ppt          → 逐页图、原生备注、页数
-4  定讲稿     抽取 / 用户提供 / 本地生成    →  final_notes
-5  本地生成   （可选）按语言/字数/语气生成    专业 TTS 讲稿
-6  选音色     pptalker_list_voices        50+ 音色（可选）
-7  渲染      pptalker_create_video       ⚠️ 必须先经用户确认讲稿
-8  轮询      pptalker_get_video_status   出片 → share_url
+1  核额度    pptalker_account     剩余分钟数 / 可用音色
+2  上传+解析 pptalker_render      本地文件 → 逐页预览、原生备注、页数（首次调用同步解析）
+3  定讲稿    用户提供 > 原生备注 > 本地起草   → notes[]
+4  确认      ⚠️ 逐页展示，等用户明确同意
+5  渲染      pptalker_render      同一个 request_id + notes_confirmed=true
+6  轮询      pptalker_status      出片 → video_url
 ```
 
-> **核心安全约束**：未经用户明确确认 `final_notes`，绝不调用 `pptalker_create_video`。完整流程见 [SKILL.md](./SKILL.md)。
+> **核心安全约束**：未经用户明确确认讲稿，绝不传 `notes_confirmed=true`。
+> 未确认前不会扣费，所以多确认一次没有成本。完整流程见 [SKILL.md](./SKILL.md)。
+>
+> 旧版 6 个工具（`upload_ppt` / `parse_ppt` / `list_voices` / `create_video` / `get_video_status` / `get_account`）
+> 已合并为 3 个：解析并入 `pptalker_render`，音色列表并入 `pptalker_account`。
 
 ---
 
@@ -214,7 +216,7 @@ pptalker-skill/
 ## 关键设计原则
 
 1. **先审后渲** —— 讲稿未经用户确认，绝不渲染（避免浪费额度、避免错误成片）。
-2. **渲染超时不是失败** —— `create_video` 超时说明任务已提交，**绝不重试**，改去轮询，避免重复扣费。
+2. **渲染超时不是失败** —— `render` 超时说明任务已提交，**绝不重试**，改去轮询，避免重复扣费。
 3. **重试至多 3 次** —— 任一 MCP 工具失败最多重试 3 次，仍失败就停下报错、问用户怎么办。
 4. **讲稿 TTS 友好** —— 纯口语文本，禁 Markdown / 列表符号，型号版本号去连字符（"GPT-5" → "GPT 5"），中日文 CJK 与 ASCII 间不留空格。
 5. **PDF/HTML 必问讲稿来源** —— 不静默使用嵌入备注，始终让用户选「自己提供 / 自动生成」。
@@ -225,13 +227,13 @@ pptalker-skill/
 ## 常见问题
 
 **Q：渲染卡很久 / MCP 调用超时了？**
-A：`create_video` 超时是正常的（长任务已在服务端提交），**不要重试**，去轮询 `pptalker_get_video_status`（复用同一个 `request_id`），重复调用可能重复扣费。
+A：`render` 超时是正常的（长任务已在服务端提交），**不要重试**，去轮询 `pptalker_status`（复用同一个 `request_id`），重复调用可能重复扣费。
 
 **Q：额度怎么算？**
 A：1 额度 = 1 分钟成片。10 页幻灯片大约 3–5 分钟 → 3–5 额度。上传、解析、本地生成讲稿都免费。
 
 **Q：能换语言 / 换音色吗？**
-A：可以。`pptalker_list_voices` 浏览 50+ 音色，渲染时传 `language` + `voice` 即可；讲稿语言要和音色语言一致。
+A：可以。`pptalker_account` 的 `voices` 字段浏览 50+ 音色，渲染时传 `language` + `voice` 即可；讲稿语言要和音色语言一致。
 
 更多错误码与超时处理见 [references/error-handling.md](./references/error-handling.md)。
 

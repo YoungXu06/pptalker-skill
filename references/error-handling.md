@@ -2,61 +2,50 @@
 
 ## Hard Rules (must never break)
 
-1. Never call `pptalker_create_video` until the user explicitly confirms
-   `final_notes`.
-2. `final_notes.length` must equal `total_pages` and at least one entry
-   must be non-empty.
-3. After Step 3, always use the canonical `request_id` and `file_name`
-   returned by `pptalker_parse_ppt` (HTML may have changed `file_name`
-   to `.pdf`).
-4. Match `language` to the language of `final_notes` and the chosen voice.
-5. For `.pdf` / `.html` / `.htm` inputs, always ask the user to choose the
-   narration source (user-provided vs. auto-generate). Never silently use
-   `notes_source="html_aside"` or any other embedded notes for these
-   formats.
-6. Never call `pptalker_generate_notes`. Generate notes locally per
-   Step 5 (see `note-generation-prompt.md`).
-7. Before local note generation, always ask the user for narration
-   preferences (language / words-per-slide / tone / extra context).
-   One round-trip with "default" is fine — but never skip the question.
-8. Retry any failing MCP tool **at most 3 times total**. After 3 failed
-   attempts, stop, surface the last error, and ask the user how to proceed.
-   Exception: a `pptalker_create_video` TIMEOUT is not a failure (task is
-   already submitted) — never re-call it; poll `pptalker_get_video_status`
-   with the same `request_id` instead.
+1. Never call `pptalker_render` with `notes_confirmed=true` until the user explicitly approves the
+   narration text.
+2. `notes.length` must equal `pages`, and at least one entry must be non-empty.
+3. Always reuse the canonical `file_name` / `request_id` returned by the prepared result.
+   HTML uploads are converted, so the canonical name becomes `.pdf`.
+4. Match `language` to the language of the narration and the chosen voice.
+5. Never re-upload a file to work around an error that happened after upload — that creates a
+   second chargeable task.
 
-## Error Codes
+## Error responses
 
-| Code  | Meaning                | Action                                                                 |
-|-------|------------------------|------------------------------------------------------------------------|
-| 1003  | INSUFFICIENT_CREDITS   | Stop. Link the user to https://www.pptalker.com/pricing.               |
-| 1004  | Pages/chars exceed plan| Reduce slides or upgrade plan.                                          |
-| 1005  | Corrupted file         | Ask the user to re-export the deck.                                     |
-| 1002  | Generic task fail      | Retry once; if persistent, simplify the deck or notes.                  |
-| 1010  | Voice clone needs Max  | Switch to a standard voice and inform the user.                         |
+Every error carries `error`, `retryable`, and `action`. Follow `action`; do not guess.
 
-## Timeouts
+| Action | Meaning | What the agent should do |
+|---|---|---|
+| `add_credits` | Not enough minutes | Tell the user the balance; do not retry the same call |
+| `reduce_input` | Over page or character limit | Ask the user to split the deck or shorten narration |
+| `re_export_file` | File cannot be parsed | Ask for a `.pptx` or PDF export; `.ppt` is unsupported |
+| `fix_notes` | Narration count ≠ page count | Show the page count, ask the user to add or remove entries |
+| `choose_voice` | Voice id not in the catalog | Call `pptalker_account`, list voices, let the user pick |
+| `confirm_notes` | Narration not approved yet | Show the narration and get explicit approval |
+| `retry_later` | Backend unavailable or rate limited | Wait a few minutes; check status meanwhile |
+| `fix_input` | Invalid parameter or filename | Fix the argument; do not retry unchanged |
+| `check_request_id` | Task not found for this account | Confirm the id came from this account's own task |
+| `retry_once` | Render failed | Retry the same id once, after confirming with the user |
+| `contact_support` | Unclassified failure | Report the id and time to the maintainer |
 
-| Where                        | Meaning                                       | Action                                                                                                  |
-|------------------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------------------|
-| `create_video` TIMEOUT       | Long-running render task; already submitted    | **Do NOT retry.** Go to Step 8 and poll `pptalker_get_video_status` every 30s with the same `request_id`. |
-| `upload_ppt` TIMEOUT         | Slow network / large file                      | Retry once; ensure file < 50 MB.                                                                          |
-| `get_video_status` TIMEOUT   | Server slow                                    | Retry; or fall back to the 30s polling loop.                                                              |
+## Limits
 
-If `pptalker_create_video` returns an error about missing notes, re-run
-Step 4 — notes were not actually confirmed.
+| Limit | Value |
+|---|---|
+| File size | 50 MiB |
+| Slides per deck | 80 |
+| Narration total | 100,000 characters |
+| One narration entry | 20,000 characters |
+| Speed | 80–150 |
+| Concurrent renders per account | 2 |
 
-## Cost & Plan Limits
+## Guard rails
 
-| Resource         | Free  | Pro    | Max    |
-|------------------|-------|--------|--------|
-| Credits / month  | 5 min | 30 min | 120 min |
-| Max slides       | 10    | 50     | 200    |
-| Watermark        | Yes   | No     | No     |
-| Voice cloning    | No    | No     | Yes    |
-
-1 credit = 1 minute of output. Upload + parse + local note generation
-are free.
-
-A 10-slide deck typically renders to a 3–5 minute video → 3–5 credits.
-Verify `left_credits >= estimated_minutes` in Step 1 before proceeding.
+- `retryable: true` → safe to try again, but check `action` first.
+- `retryable: false` → retrying will not help; the input or account state must change.
+- `unknown` status or a timeout → **query `pptalker_status` before doing anything else.**
+- Do not treat `failed` as proof that nothing was charged. Check `credits_charged` and the account
+  balance before telling the user nothing happened.
+- A temporary `BACKEND_UNAVAILABLE` is not a bad file. Do not ask the user to re-export it.
+- If the same error repeats twice, stop and report it instead of retrying a third time.
