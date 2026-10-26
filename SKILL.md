@@ -108,6 +108,28 @@ Total narration ≤100,000 characters; ≤80 slides.
    with the **same** id. Never re-upload.
 7. **Deliver** — poll `pptalker_status` until `done`, then give the user `video_url`.
 
+## Read `defaults` before asking anything
+
+`pptalker_account` returns the values that are **actually in effect** from the local MCP config:
+
+```json
+"defaults": {
+  "language": "zh-CN", "style": "clean", "voice": "智斌", "speed": 120,
+  "subtitles": true, "subtitle_size": "medium",
+  "subtitle_color": "white", "subtitle_bg": "semi-transparent"
+}
+```
+
+Once a user puts these in their MCP environment, they do not want to be asked again. Rules:
+
+1. If the user did not mention voice / speed / subtitles, **do not pass those parameters** — let the
+   configured defaults apply.
+2. When you must state what will be used, read `defaults`. **Never infer it from the schema.**
+   If `defaults.voice` is `智斌`, say "using 智斌 as configured" — not "default female voice 智菊".
+3. Only `null` entries (usually just voice) need a question, or when the user asks to change something.
+4. When confirming narration, **ask only about the narration**. Do not re-list every parameter.
+5. If the user does specify a new voice / speed, pass it — that is when you override the config.
+
 ## Voice and speed (do not make the user recite IDs)
 
 **Do not pass `voice` by default** — the backend picks the first voice for `language`.
