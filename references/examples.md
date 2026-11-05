@@ -1,83 +1,74 @@
 # End-to-end Examples
 
-Two complete walkthroughs. Read this when unsure about call order or how to branch after
-the prepared result comes back.
+Two complete walkthroughs against the **hosted** MCP server. Read this when unsure about call order
+or how to branch after parsing finishes.
 
-## Example 1: `.pptx` with native speaker notes
+The server never receives a local file path. The agent creates a task, the user uploads the file in
+a browser, and only then can rendering start.
 
-User: "Convert /tmp/pitch.pptx to a video with English narration."
+## Example 1: PDF with an existing script
+
+User: "Turn output.pdf and its script into a video."
 
 ```
 1. pptalker_account()
-     → plan Free, 28 min left, voices include "Matthew" (en-US)
+     → plan Max, 162 min left
 
-2. pptalker_render(file_path="/tmp/pitch.pptx", wait=false, notes_confirmed=false)
-     → status=needs_confirmation, pages=12,
-       canonicalfile="pitch.pdf", native_notes=[...12 entries...]
+2. pptalker_prepare_upload(file_name="output.pdf")
+     → request_id="agent-4f2a…", upload_url="https://www.pptalker.com/agent/upload#token=…"
 
-3. Show all 12 entries numbered, then ask "确认用这份讲稿生成吗？"
-     → user replies "改第 3 页：…，其余 OK"
-     → apply the edit, show the revised narration again, ask again
+3. Tell the user: open upload_url, sign in, choose the file.
+     → user confirms the page says "Upload complete"
+
+4. pptalker_render(request_id="agent-4f2a…")         # no notes yet
+     → status=preparing, action=check_status
+
+5. pptalker_status(request_id="agent-4f2a…", wait=true, timeout_seconds=30)
+     → status=preparing
+     → poll again …
+     → status=needs_notes, pages=9
+
+6. The user supplied a script → split it per slide, use it verbatim.
+   Print all 9 entries numbered, ask "确认用这份讲稿生成吗？"
      → user replies "可以"
 
-4. pptalker_render(request_id="agent-…", notes=[...12 revised...],
-                   notes_confirmed=true, language="en-US", voice="Matthew")
+7. pptalker_render(request_id="agent-4f2a…", notes=[…9 entries…],
+                   notes_confirmed=true, language="zh-CN")
      → status=submitted
 
-5. pptalker_status(request_id="agent-…")      (repeat every 10–20s)
-     → status=processing → … → status=done, duration=612, video_url=https://…
+8. pptalker_status(request_id="agent-4f2a…", wait=true, timeout_seconds=30)
+     → status=processing … → status=done, duration=520,
+       video_url="https://www.pptalker.com/video/public/<user>/agent-4f2a…"
 ```
 
-## Example 2: HTML deck, no native notes
+`video_url` is the canonical page, not a storage link. Give it to the user as-is.
 
-User: "把这个 html 演示做成中文视频：/Users/me/deck/index.html"
+## Example 2: deck with native speaker notes
 
 ```
-1. pptalker_render(file_path="/Users/me/deck/index.html", notes_confirmed=false)
-     → status=needs_notes, pages=8, canonicalfile="index.pdf", native_notes=["", …]
+1. pptalker_prepare_upload(file_name="pitch.pptx")
+     → request_id + upload_url; user uploads in the browser
 
-2. Draft 8 entries from the slide content (15–80 chars each, no invented numbers)
-   Show them numbered, ask for approval
-     → user says "第 5 页补充一下我们上季度的数据"
-     → cannot invent data; ask the user for the exact figure
-     → user provides "环比增长 18%"
-     → show the updated narration again, get approval
+2. pptalker_render(request_id="agent-…")
+     → status=preparing
 
-3. pptalker_render(request_id="agent-…", notes=[...], notes_confirmed=true,
-                   language="zh-CN", style="clean", speed=100)
+3. pptalker_status(request_id="agent-…", wait=true)
+     → status=needs_confirmation, pages=12, native_notes=[…12 entries…]
+
+4. Show all 12 entries, ask for approval
+     → user replies "改第 3 页：…，其余 OK"
+     → apply the edit, show the revised narration, ask again
+     → user replies "可以"
+
+5. pptalker_render(request_id="agent-…", notes=[…12 revised…], notes_confirmed=true)
      → status=submitted
-
-4. pptalker_status(request_id="agent-…") → status=done → deliver video_url
 ```
 
-## Example 3: recovering after a client crash
+## What NOT to do
 
-User: "刚才那个视频做好了吗？"
-
-```
-1. pptalker_account()
-     → last_tasks=[{request_id:"agent-…", status:"processing", submission:"accepted"}]
-
-2. pptalker_status(request_id="agent-…")
-     → status=done, video_url=https://…
-
-3. Deliver the link. Do NOT re-upload the source file.
-```
-
-## Example 4: user hands over narration up front
-
-User: "用这份讲稿做视频，第一页讲市场背景…第二页讲产品…第三页讲财务…"
-
-```
-1. pptalker_render(file_path="/abs/deck.pptx", notes_confirmed=false)
-     → status=needs_notes, pages=3
-
-2. Use the user's own wording verbatim as notes (3 entries).
-   Do not polish or reorder.
-   Show all 3 and ask: "确认用这份讲稿生成吗？"
-
-3. pptalker_render(request_id="agent-…", notes=[user's 3 entries],
-                   notes_confirmed=true)
-```
-
-If the user's list length ≠ page count, stop and say "你给了 N 条，稿子有 M 页" — never pad or trim.
+- Do not ask the user for the one-time token from `upload_url`; it stays in the browser.
+- Do not call `pptalker_render` with notes before the upload completes — it returns
+  `UPLOAD_REQUIRED` and wastes a round trip.
+- Do not start over when parsing is slow. `preparing` is normal for large decks; keep polling the
+  same `request_id`.
+- Do not re-upload because a status call looked odd. Poll `pptalker_status` first.
