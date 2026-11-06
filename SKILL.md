@@ -89,15 +89,19 @@ the call; it does not cancel server work. Poll again if it returns `preparing`.
 2. **Prepare the upload** — `pptalker_prepare_upload({ file_name })`.
    Give the user the returned `upload_url` and ask them to open it, sign in, and pick the file.
    Do **not** ask them to paste the token back.
-3. **Start parsing** — `pptalker_render({ request_id })` **without** `notes`.
+3. **Wait for the upload** — `pptalker_status({ request_id, wait: true })`.
+   It returns `awaiting_upload` until the browser step finishes, and `wait=true` blocks up to
+   30 s per call, so you do **not** need to guess a sleep. Call it again while it is still
+   `awaiting_upload`; do not call render early and retry on `UPLOAD_REQUIRED`.
+4. **Start parsing** — `pptalker_render({ request_id })` **without** `notes`.
    Parsing runs in the background, so it returns `status=preparing`.
-4. **Poll** — `pptalker_status({ request_id, wait: true })` until `needs_notes` /
+5. **Poll** — `pptalker_status({ request_id, wait: true })` until `needs_notes` /
    `needs_confirmation`. Large decks can take several minutes; keep polling rather than retrying.
-5. **Resolve narration** — priority order below.
-6. **Confirm** — print every slide's narration, ask the user, and only then continue.
-7. **Render** — `pptalker_render({ request_id, notes, notes_confirmed: true, ... })`.
+6. **Resolve narration** — priority order below.
+7. **Confirm** — print every slide's narration, ask the user, and only then continue.
+8. **Render** — `pptalker_render({ request_id, notes, notes_confirmed: true, ... })`.
    Never upload again; the existing upload is reused.
-8. **Deliver** — poll `pptalker_status` until `done`, then give the user `video_url`.
+9. **Deliver** — poll `pptalker_status` until `done`, then give the user `video_url`.
 
 `video_url` after `done` is the **canonical PPTalker page**
 (`https://www.pptalker.com/video/...`), not a storage link. Give that to the user; it stays valid
@@ -129,6 +133,7 @@ and mints a fresh media URL on view.
 
 | Status | Meaning | Action |
 |---|---|---|
+| `awaiting_upload` | link issued, file not sent yet | keep polling `pptalker_status`; `wait=true` blocks up to 30 s |
 | `uploaded` | slot assigned, no file yet | user must open the upload link |
 | `preparing` | parsing in background | poll `pptalker_status` |
 | `needs_notes` | parsed, deck has no notes | draft narration, then confirm |
