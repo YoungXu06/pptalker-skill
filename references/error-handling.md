@@ -2,16 +2,18 @@
 
 ## Hard Rules (must never break)
 
-1. Never call `pptalker_render` with `notes_confirmed=true` until the user explicitly approves the
+1. Start with `pptalker_account` and route on `accepts_local_file_path`. Never send a local path to
+   the hosted server and never ask for a browser link from the local package.
+2. Never call `pptalker_render` with `notes_confirmed=true` until the user explicitly approves the
    narration text.
-2. `notes.length` must equal `pages`, and at least one entry must be non-empty.
-3. Reuse the same `request_id` for parsing, confirming and rendering. Never upload twice for one
+3. `notes.length` must equal `pages`, and at least one entry must be non-empty.
+4. Reuse the same `request_id` for parsing, confirming and rendering. Never upload twice for one
    video — that creates a second chargeable task.
-4. Match `language` to the language of the narration and the chosen voice. When the narration is
+5. Match `language` to the language of the narration and the chosen voice. When the narration is
    CJK, the renderer picks a CJK font automatically, so a mismatched `language` will not break
    subtitles — but it still affects the voice.
-5. Review can take longer than the 15-minute upload link. A completed upload is not tied to the
-   link TTL, so there is no need to re-upload while editing narration.
+6. In browser mode, review can take longer than the upload link. A completed upload is not tied to
+   the link TTL, so there is no need to re-upload while editing narration.
 
 ## Error responses
 
@@ -19,7 +21,10 @@ Every error carries `error`, `retryable`, and `action`. Follow `action`; do not 
 
 | Action | Meaning | What the agent should do |
 |---|---|---|
+| `wait_for_upload` | Hosted link is open but no file yet | Keep polling status; do not call render early |
 | `finish_upload` | The browser upload has not completed | Ask the user to open the link and upload; issue a new link if it expired |
+| `restart_upload_with_new_id` | Local read/PUT failed or slot is incomplete | Start a new local task from `file_path`; do not reuse a broken id |
+| `submit_prepare` | Local PUT completed, prepare not submitted | Call render with the same id |
 | `check_request_id` | The id is unknown for this account | Reuse the id from `pptalker_prepare_upload`; do not invent one |
 | `add_credits` | Not enough minutes | Tell the user the balance; do not retry the same call |
 | `reduce_input` | Over page or character limit | Ask the user to split the deck or shorten narration |
@@ -33,14 +38,19 @@ Every error carries `error`, `retryable`, and `action`. Follow `action`; do not 
 
 | Error | Meaning | What to do |
 |---|---|---|
-| `UPLOAD_REQUIRED` | The file was never uploaded | Open `upload_url`, sign in, choose the file |
-| `UPLOAD_MISSING` | The object is gone or empty | Issue a new link; do not reuse the old one |
+| `UPLOAD_REQUIRED` | Browser mode: the file was never uploaded | Open `upload_url`, sign in, choose the file |
+| `UPLOAD_MISSING` | Browser mode: the object is gone or empty | Issue a new link; do not reuse the old one |
 | `UPLOAD_TOO_LARGE` | Over the 50 MiB limit | Ask for a smaller file or a PDF export |
+| `LOCAL_UPLOAD_FAILED` | Local mode: read or PUT failed | Follow `restart_upload_with_new_id`; start from the same local file |
 | `INSUFFICIENT_SCOPE` | The connection lacks a scope | The client re-opens consent; ask the user to approve |
 | `INVALID_TOKEN` | Expired or revoked connection | The client refreshes automatically; if it persists, re-login |
 
 A `403` with `insufficient_scope` is **not** a render failure. The client will offer to
 re-authorize; let it.
+
+In local mode, `restart_upload_with_new_id` and `check_status` come from the local
+package, not from the browser upload service. Do not translate them into a browser
+link unless the user explicitly agrees to switch transports.
 
 ## `preparing` is not an error
 

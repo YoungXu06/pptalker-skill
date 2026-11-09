@@ -92,12 +92,25 @@ The agent will: upload → parse per-slide content → extract or generate notes
 
 ---
 
+## Two transports
+
+The skill supports both PPTalker MCP transports. It calls `pptalker_account` first
+and routes on `accepts_local_file_path`; the user does not have to choose a mode.
+
+| Mode | Clients | Upload | Auth |
+|---|---|---|---|
+| Local MCP | Codex CLI / Claude Code / CodeBuddy / Cursor and other clients that can run local processes | The agent reads the local file and uploads it directly | `PPTALKER_API_KEY` (`pptk_live_`) |
+| Hosted MCP | ChatGPT and other remote-only clients that cannot read local files | One-time browser upload link; the user selects the file | Browser OAuth |
+
+> The local package does not put file bytes into the model context. The local MCP
+> process reads the file and PUTs it to object storage; the model handles narration
+> and workflow only.
+
 ## Workflow
 
 ```
-1  Credits    pptalker_account         remaining minutes and available voices
-2  Submit     pptalker_render          local file → per-slide previews, native notes, page count
-                                      (the first call parses synchronously)
+1  Discover   pptalker_account         server_mode / upload_mode / accepts_local_file_path
+2  Upload     local: render(file_path) / hosted: prepare_upload → browser → render(request_id)
 3  Resolve    user-provided > native notes > local drafting   → notes[]
 4  Confirm    ⚠️ show every slide, wait for explicit approval
 5  Render     pptalker_render          same request_id + notes_confirmed=true
@@ -137,7 +150,13 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ---
 
-## Dependency: configure the PPTalker MCP
+## Dependency: configure one PPTalker MCP transport
+
+Choose one transport; you do not need both. Use the local `@pptalker/agent` package
+when the agent should finish the upload end to end in a CLI. Use hosted MCP at
+`https://mcp.pptalker.com/mcp` when the client is remote-only.
+
+### Option A: local MCP (automatic upload)
 
 This skill orchestrates PPTalker's MCP tools. Register `@pptalker/agent` in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first:
 
@@ -156,7 +175,21 @@ This skill orchestrates PPTalker's MCP tools. Register `@pptalker/agent` in your
 }
 ```
 
-### Configurable system parameters (env)
+### Option B: hosted MCP (browser upload)
+
+```bash
+# Codex
+codex mcp add pptalker --url https://mcp.pptalker.com/mcp
+codex mcp login pptalker
+
+# Claude Code
+claude mcp add --transport http pptalker https://mcp.pptalker.com/mcp
+```
+
+Hosted MCP needs no API key; the first call opens browser OAuth. The file is
+uploaded through a one-time page, and the server never receives a local path.
+
+### Local-mode system parameters (env)
 
 The first two are required; everything else is an **optional default** applied at render time
 unless you override it in the conversation.
@@ -185,7 +218,7 @@ unless you override it in the conversation.
 > style in chat — parameters passed at render time override them. Full voice list lives in
 > [SKILL.md](./SKILL.md).
 
-- Get an API key: https://www.pptalker.com/profile
+- Local-mode API key: https://www.pptalker.com/profile
 - Credits & pricing: https://www.pptalker.com/pricing (1 credit = 1 minute of output; upload, parse, and local note generation are free)
 
 ---

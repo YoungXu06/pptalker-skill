@@ -92,11 +92,24 @@ Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 
 
 ---
 
+## 两种接入方式
+
+这个 skill 兼容 PPTalker 的两套 MCP，并在第一步用 `pptalker_account` 返回的
+`accepts_local_file_path` 自动路由，不需要用户手动选模式。
+
+| 方式 | 适用客户端 | 上传 | 鉴权 |
+|---|---|---|---|
+| 本地 MCP | Codex CLI / Claude Code / CodeBuddy / Cursor 等能执行本地进程的客户端 | Agent 直接读取本地文件并上传，无需打开浏览器 | `PPTALKER_API_KEY`（`pptk_live_`） |
+| 托管 MCP | ChatGPT 等无法读取本地文件的远程客户端 | 一次性浏览器上传链接，用户选择文件 | 浏览器 OAuth |
+
+> 本地包上传不会把文件放进模型上下文，模型只负责讲稿与流程；真正读文件、PUT
+> 到对象存储的是本机 MCP 进程。
+
 ## 工作流
 
 ```
-1  核额度    pptalker_account     剩余分钟数 / 可用音色
-2  上传+解析 pptalker_render      本地文件 → 逐页预览、原生备注、页数（首次调用同步解析）
+1  探测能力  pptalker_account     server_mode / upload_mode / accepts_local_file_path
+2  上传+解析 本地：render(file_path) / 托管：prepare_upload → 浏览器上传 → render(request_id)
 3  定讲稿    用户提供 > 原生备注 > 本地起草   → notes[]
 4  确认      ⚠️ 逐页展示，等用户明确同意
 5  渲染      pptalker_render      同一个 request_id + notes_confirmed=true
@@ -135,7 +148,12 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ---
 
-## 依赖：配置 PPTalker MCP
+## 依赖：配置一种 PPTalker MCP
+
+两种方式选一种即可，不需要同时配置。希望 Agent 在 CLI 里端到端完成时，用本地
+`@pptalker/agent`；只能远程接入时，用托管 MCP `https://mcp.pptalker.com/mcp`。
+
+### 方式 A：本地 MCP（自动上传）
 
 本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册 `@pptalker/agent`：
 
@@ -154,7 +172,21 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 }
 ```
 
-### 可配置的系统参数（env）
+### 方式 B：托管 MCP（浏览器上传）
+
+```bash
+# Codex
+codex mcp add pptalker --url https://mcp.pptalker.com/mcp
+codex mcp login pptalker
+
+# Claude Code
+claude mcp add --transport http pptalker https://mcp.pptalker.com/mcp
+```
+
+托管方式不需要 API Key；首次调用会打开浏览器 OAuth。文件通过一次性上传页进入
+PPTalker，服务端不会接收本地路径。
+
+### 本地方式的可配置系统参数（env）
 
 前两项必填，其余都是**可选默认值**——渲染时若未在对话里单独指定，就套用这里的配置。
 
@@ -180,7 +212,7 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 > 以上只是**默认值**：同一套配置下仍可在对话里临时改语言 / 音色 / 语速 / 风格，渲染时传入的参数会覆盖默认。
 > 音色完整清单见 [SKILL.md](./SKILL.md)。
 
-- API Key 申请：https://www.pptalker.com/profile
+- 本地方式 API Key 申请：https://www.pptalker.com/profile
 - 额度与定价：https://www.pptalker.com/pricing （1 额度 = 1 分钟成片；上传、解析、本地生成讲稿均免费）
 
 ---
