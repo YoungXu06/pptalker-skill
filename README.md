@@ -94,8 +94,9 @@ Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 
 
 ## 两种接入方式
 
-这个 skill 兼容 PPTalker 的两套 MCP，并在第一步用 `pptalker_account` 返回的
-`accepts_local_file_path` 自动路由，不需要用户手动选模式。
+这个 skill 兼容 PPTalker 的两套 MCP。**你注册了哪一套，就只能用哪一套的上传方式**；
+skill 在第一步用 `pptalker_account` 返回的 `accepts_local_file_path` 识别当前连接，
+并按对应流程执行，不会中途切换。
 
 | 方式 | 适用客户端 | 上传 | 鉴权 |
 |---|---|---|---|
@@ -104,6 +105,8 @@ Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 
 
 > 本地包上传不会把文件放进模型上下文，模型只负责讲稿与流程；真正读文件、PUT
 > 到对象存储的是本机 MCP 进程。
+>
+> 同一任务不要更换 MCP 连接：换用另一套会创建新的请求，可能重复扣费。
 
 ## 工作流
 
@@ -155,7 +158,25 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 
 ### 方式 A：本地 MCP（自动上传）
 
-本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册 `@pptalker/agent`：
+本 skill 编排 PPTalker 的 MCP 工具，需先在你的 MCP 客户端（Claude Code / Codex / CodeBuddy / Cursor 等）中注册 `@pptalker/agent`。
+
+Codex 和 Claude Code 可以用一条命令完成（把 `pptk_live_...` 换成你的 Key）：
+
+```bash
+# Codex
+codex mcp add pptalker \
+  --env PPTALKER_AGENT_API_BASE=https://api.pptalker.com \
+  --env PPTALKER_API_KEY=pptk_live_... \
+  -- npx -y @pptalker/agent
+
+# Claude Code
+claude mcp add pptalker \
+  -e PPTALKER_AGENT_API_BASE=https://api.pptalker.com \
+  -e PPTALKER_API_KEY=pptk_live_... \
+  -- npx -y @pptalker/agent
+```
+
+其他客户端粘贴等价的 JSON：
 
 ```json
 {

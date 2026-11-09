@@ -94,8 +94,9 @@ The agent will: upload → parse per-slide content → extract or generate notes
 
 ## Two transports
 
-The skill supports both PPTalker MCP transports. It calls `pptalker_account` first
-and routes on `accepts_local_file_path`; the user does not have to choose a mode.
+The skill supports both PPTalker MCP transports. **The transport you register is the
+one it uses**; it calls `pptalker_account` first and routes on `accepts_local_file_path`,
+so it never switches mid-task.
 
 | Mode | Clients | Upload | Auth |
 |---|---|---|---|
@@ -105,6 +106,9 @@ and routes on `accepts_local_file_path`; the user does not have to choose a mode
 > The local package does not put file bytes into the model context. The local MCP
 > process reads the file and PUTs it to object storage; the model handles narration
 > and workflow only.
+>
+> Do not change transports in the middle of a task: the other transport creates a
+> new request and may charge twice.
 
 ## Workflow
 
@@ -158,7 +162,25 @@ when the agent should finish the upload end to end in a CLI. Use hosted MCP at
 
 ### Option A: local MCP (automatic upload)
 
-This skill orchestrates PPTalker's MCP tools. Register `@pptalker/agent` in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first:
+This skill orchestrates PPTalker's MCP tools. Register `@pptalker/agent` in your MCP client (Claude Code / Codex / CodeBuddy / Cursor, etc.) first.
+
+Codex and Claude Code can add it in one command (replace `pptk_live_...` with your key):
+
+```bash
+# Codex
+codex mcp add pptalker \
+  --env PPTALKER_AGENT_API_BASE=https://api.pptalker.com \
+  --env PPTALKER_API_KEY=pptk_live_... \
+  -- npx -y @pptalker/agent
+
+# Claude Code
+claude mcp add pptalker \
+  -e PPTALKER_AGENT_API_BASE=https://api.pptalker.com \
+  -e PPTALKER_API_KEY=pptk_live_... \
+  -- npx -y @pptalker/agent
+```
+
+For any other client, paste the equivalent JSON:
 
 ```json
 {
