@@ -42,6 +42,16 @@ Together they form one seamless pipeline:
 
 > The `script.md` produced by content-to-slides can be fed directly as this skill's per-slide notes — no rewriting, end-to-end from "one link" to "one finished video".
 
+How to hand off (both files in the same directory):
+
+```
+Make a video from content-to-slides-output/<project>/presentation.html,
+using script.md in the same folder as the notes, Chinese voiceover
+```
+
+The agent reads the per-slide narration from `script.md`, maps it to the slides
+in order, and shows it to you for confirmation before rendering.
+
 ---
 
 ## What you get
@@ -49,7 +59,8 @@ Together they form one seamless pipeline:
 | Output | Description |
 |--------|-------------|
 | Narrated video | MP4 with AI voiceover + synced subtitles, explained slide by slide |
-| `share_url` | Permanent public player link (`pptalker.com/video/public/...`), share / embed directly |
+| `video_url` | PPTalker watch page (`pptalker.com/video/public/<user>/<id>`), stable and permanent |
+| `share_url` | Returned only once the video is public; same value as `video_url`, ready to share / embed |
 | Per-slide notes | The `final_notes` confirmed before rendering — professional, TTS-safe, reusable |
 
 ---
@@ -64,7 +75,7 @@ Turn this PDF deck into a Chinese narrated video: /abs/path/to/slides.pdf
 Narrate this HTML deck with English voiceover: /abs/path/to/presentation.html
 ```
 
-The agent will: upload → parse per-slide content → extract or generate notes → **let you confirm/edit** → pick a voice → render → poll, then hand you a permanent `share_url`.
+The agent will: upload → parse per-slide content → extract or generate notes → **let you confirm/edit** → pick a voice → render → poll, then hand you `video_url` — the PPTalker watch page, not an expiring object-storage link.
 
 ---
 
@@ -147,6 +158,10 @@ the owner and note that it isn't meant for forwarding yet.
 This skill is a plain file structure (`SKILL.md` + `references/`). Drop the directory into your agent's skills search path.
 
 ```bash
+# Codex
+git clone https://github.com/YoungXu06/pptalker-skill.git \
+  ~/.codex/skills/pptalker
+
 # Claude Code
 git clone https://github.com/YoungXu06/pptalker-skill.git \
   ~/.claude/skills/pptalker
@@ -155,6 +170,9 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 git clone https://github.com/YoungXu06/pptalker-skill.git \
   ~/.codebuddy/skills/pptalker
 ```
+
+> The directory name is up to you, but it must contain `SKILL.md`. Update with
+> `git -C <dir> pull`.
 
 ---
 
@@ -282,7 +300,7 @@ pptalker-skill/
 3. **Retry at most 3 times** — any MCP tool retries at most 3 times total; then stop, report, and ask the user.
 4. **TTS-safe notes** — plain spoken text, no Markdown/list markers; de-hyphenate model versions ("GPT-5" → "GPT 5"); no space between CJK and ASCII for zh/ja.
 5. **Always ask for PDF/HTML notes source** — never silently use embedded notes; let the user choose "provide / auto-generate".
-6. **Expose only `share_url`** — the permanent public link to the user; the internal temporary link is debug-only and never surfaced.
+6. **Expose only `video_url`** — deliver the PPTalker watch page; raw COS links are debug-only and never surfaced.
 
 ---
 

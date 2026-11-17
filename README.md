@@ -42,6 +42,15 @@
 
 > content-to-slides 生成的 `script.md` 讲稿可直接作为本 skill 的「逐页讲稿」输入——无需重写，端到端从「一个链接」到「一条成片」。
 
+接力的具体说法（两个文件都在同一目录时）：
+
+```
+用 content-to-slides-output/<项目>/presentation.html 做视频，
+讲稿用同目录的 script.md，中文配音
+```
+
+Agent 会读取 `script.md` 里的逐页口播，按页序对应到幻灯片，展示给你确认后再渲染。
+
 ---
 
 ## 它能产出什么
@@ -49,7 +58,8 @@
 | 产出 | 说明 |
 |------|------|
 | 讲解视频 | 带 AI 配音 + 同步字幕的 MP4，按幻灯片顺序逐页讲解 |
-| `share_url` | 永久公开播放链接（`pptalker.com/video/public/...`），可直接分享 / 嵌入 |
+| `video_url` | PPTalker 网页播放页（`pptalker.com/video/public/<user>/<id>`），稳定不过期 |
+| `share_url` | 仅在视频已公开时返回，与 `video_url` 相同，可直接分享 / 嵌入 |
 | 逐页讲稿 | 渲染前确认的 `final_notes`，专业口吻、TTS 友好，可复用 |
 
 ---
@@ -64,7 +74,7 @@
 讲解一下这个 HTML slides，输出英文配音：/abs/path/to/presentation.html
 ```
 
-Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 → **给你确认/修改** → 选音色 → 渲染 → 轮询出片，最后只给你一个永久 `share_url`。
+Agent 会自动：上传 → 解析逐页内容 → 抽取或生成逐页讲稿 → **给你确认/修改** → 选音色 → 渲染 → 轮询出片，最后给你 `video_url`——PPTalker 的网页播放页，不是会过期的对象存储临时链接。
 
 ---
 
@@ -143,6 +153,10 @@ https://www.pptalker.com/video/public/<user>/<request_id>
 本 skill 是纯文件结构（`SKILL.md` + `references/`），把整个目录放进 Agent 的 skills 搜索路径即可。
 
 ```bash
+# Codex
+git clone https://github.com/YoungXu06/pptalker-skill.git \
+  ~/.codex/skills/pptalker
+
 # Claude Code
 git clone https://github.com/YoungXu06/pptalker-skill.git \
   ~/.claude/skills/pptalker
@@ -151,6 +165,8 @@ git clone https://github.com/YoungXu06/pptalker-skill.git \
 git clone https://github.com/YoungXu06/pptalker-skill.git \
   ~/.codebuddy/skills/pptalker
 ```
+
+> 目录名随意，但必须包含 `SKILL.md`。更新用 `git -C <目录> pull`。
 
 ---
 
@@ -274,7 +290,7 @@ pptalker-skill/
 3. **重试至多 3 次** —— 任一 MCP 工具失败最多重试 3 次，仍失败就停下报错、问用户怎么办。
 4. **讲稿 TTS 友好** —— 纯口语文本，禁 Markdown / 列表符号，型号版本号去连字符（"GPT-5" → "GPT 5"），中日文 CJK 与 ASCII 间不留空格。
 5. **PDF/HTML 必问讲稿来源** —— 不静默使用嵌入备注，始终让用户选「自己提供 / 自动生成」。
-6. **只暴露 `share_url`** —— 永久公开链接给用户；内部临时直链仅供调试，绝不外露。
+6. **只暴露 `video_url`** —— 交付 PPTalker 网页播放页；COS 临时直链仅供调试，绝不外露。
 
 ---
 
