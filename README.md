@@ -116,8 +116,19 @@ skill 在第一步用 `pptalker_account` 返回的 `accepts_local_file_path` 识
 3  定讲稿    用户提供 > 原生备注 > 本地起草   → notes[]
 4  确认      ⚠️ 逐页展示，等用户明确同意
 5  渲染      pptalker_render      同一个 request_id + notes_confirmed=true
-6  轮询      pptalker_status      出片 → video_url
+6  轮询      pptalker_status      出片 → video_url（PPTalker 观看页）
 ```
+
+`video_url` 是 PPTalker 的网页播放页，不是 COS 临时链接（临时链接会过期）：
+
+```
+https://www.pptalker.com/video/public/<user>/<request_id>
+```
+
+`/video/` 后面那段是租户名。目前只有一个租户 `public`，与视频是否公开**无关**。
+能不能播放由打开页面时的账号决定：所有者登录后总能看自己的视频；其他人只有在
+用户把视频设为公开后才能看。默认 `is_public=false`，因此交付时把链接给所有者，
+并说明暂时不适合转发。
 
 > **核心安全约束**：未经用户明确确认讲稿，绝不传 `notes_confirmed=true`。
 > 未确认前不会扣费，所以多确认一次没有成本。完整流程见 [SKILL.md](./SKILL.md)。

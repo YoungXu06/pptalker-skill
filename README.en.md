@@ -118,8 +118,20 @@ so it never switches mid-task.
 3  Resolve    user-provided > native notes > local drafting   → notes[]
 4  Confirm    ⚠️ show every slide, wait for explicit approval
 5  Render     pptalker_render          same request_id + notes_confirmed=true
-6  Poll       pptalker_status          done → video_url
+6  Poll       pptalker_status          done → video_url (PPTalker watch page)
 ```
+
+`video_url` is the PPTalker watch page, not a COS link (COS links expire):
+
+```
+https://www.pptalker.com/video/public/<user>/<request_id>
+```
+
+The segment after `/video/` is the tenant name. There is one tenant, `public`,
+and it says nothing about visibility. Whether the page plays is decided by the
+viewer's account when they open it: the owner always can, others only once the
+user publishes the video. With the default `is_public=false`, give the link to
+the owner and note that it isn't meant for forwarding yet.
 
 > **Core safety rule**: never pass `notes_confirmed=true` before the user approves the narration.
 > Nothing is charged until then, so reviewing twice costs nothing. Full flow in [SKILL.md](./SKILL.md).

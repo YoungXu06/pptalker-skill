@@ -62,7 +62,7 @@ user's disk, and it must not receive a `pptk_live_` key in chat.
 7. Show every slide's final narration and get explicit approval.
 8. Call `pptalker_render({request_id, notes, notes_confirmed:true, ...})`.
    Reuse the same id; never upload again.
-9. Poll `pptalker_status` until `done` and deliver `video_url`.
+9. Poll `pptalker_status` until `done`, then give the user `video_url` (the PPTalker watch page).
 
 ### Browser-mode rules
 
@@ -97,7 +97,7 @@ configured in the MCP environment, never pasted into chat.
 6. Show every slide's final narration and get explicit approval.
 7. Call `pptalker_render({request_id, notes, notes_confirmed:true, ...})` with
    the exact approved notes and the same id.
-8. Poll status until `done` and deliver `video_url`.
+8. Poll status until `done`, then give the user `video_url` (the PPTalker watch page).
 
 ### Local-mode rules
 
@@ -160,7 +160,7 @@ Before rendering:
 | `needs_notes` | no usable native notes | draft narration, show it, confirm |
 | `needs_confirmation` | native notes available | show them, confirm |
 | `submitted` / `processing` / `rendering` | rendering | poll only; never submit again |
-| `done` | finished | deliver `video_url`; repeated calls are idempotent |
+| `done` | finished | deliver `video_url` (the PPTalker watch page); repeated calls are idempotent |
 | `failed` | failed | follow `error` and `action`; do not blindly retry |
 | `unknown` | outcome uncertain | check status first; do not regenerate |
 
@@ -169,8 +169,21 @@ Before rendering:
   then query status.
 - Render/post timeouts are not proof of failure. Check status before any retry;
   a blind resubmit can create a second chargeable task.
-- Deliver only the canonical `video_url` to the current user. It is not a storage
-  link and may expire; re-query status rather than inventing a new URL.
+- `video_url` is the **PPTalker watch page**, not a storage link. It is stable;
+  never substitute a COS/`myqcloud` URL even if one appears elsewhere.
+- The path segment after `/video/` is the tenant name, not a visibility flag.
+  There is a single tenant, `public`, so the shape is always
+  `https://www.pptalker.com/video/public/<user>/<request_id>`. Do not read
+  anything into the word `public` and do not vary the URL by `is_public`.
+- Whether the page plays is decided when the page is opened, by the viewer's
+  account:
+  - the owner, signed in, can always watch their own video;
+  - anyone else can watch only if the user has made that video public.
+- So `is_public=false` (default) means: send the link to the owner, and do not
+  present it as something to forward to others yet. Say this plainly when
+  handing it over.
+- Publishing is the user's own action on the video page. Never do it on their
+  behalf, and never promise that a private link is shareable.
 - Do not relay raw errors, stack traces, upload signatures or credentials.
 
 ## 7. Boundaries

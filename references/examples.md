@@ -40,7 +40,15 @@ User: "Turn /Users/me/talk.pdf and its script into a Chinese narrated video."
      → video_url="https://www.pptalker.com/video/..."
 ```
 
-Deliver the canonical page URL, not a storage URL.
+Deliver the canonical page URL, not a storage URL:
+
+`https://www.pptalker.com/video/public/<user>/<request_id>`
+
+The segment after `/video/` is the tenant name. There is one tenant, `public`;
+it says nothing about visibility. Who can play the page is decided by the
+viewer's account when they open it — the owner always can, others only after the
+user publishes the video. So with the default `is_public=false`, hand the link to
+the owner and don't offer it as something to forward yet.
 
 ## Example 2: hosted/browser mode
 
