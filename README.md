@@ -45,11 +45,15 @@
 接力的具体说法（两个文件都在同一目录时）：
 
 ```
-用 content-to-slides-output/<项目>/presentation.html 做视频，
+用 content-to-slides-output/<项目>/output.pdf 做视频，
 讲稿用同目录的 script.md，中文配音
 ```
 
 Agent 会读取 `script.md` 里的逐页口播，按页序对应到幻灯片，展示给你确认后再渲染。
+
+**有 PDF 就用 PDF，不要用 `presentation.html`。** content-to-slides 已经把 HTML
+渲染成 PDF，图片也在里面；直接传 PDF 省掉服务端逐页渲染（每页 1–5 秒，页数多
+时容易超时），成片效果一致。
 
 ---
 

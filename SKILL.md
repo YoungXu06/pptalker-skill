@@ -88,6 +88,11 @@ configured in the MCP environment, never pasted into chat.
 1. Confirm the input is an absolute local path ending in `.pptx`, `.pdf`, `.html`
    or `.htm`, is non-empty, and is ≤50 MiB. `.ppt` must be saved as `.pptx` or
    exported as PDF.
+   **Prefer PDF when both exist.** If the same deck is available as both
+   `output.pdf` and `presentation.html` (the usual content-to-slides output),
+   upload the PDF. PDF goes straight to document transcoding, while HTML is
+   rendered page by page first (≈1.1–5.1 s/page, and a hard timeout on long
+   decks). Same visual result, much less time and fewer failure modes.
 2. Call `pptalker_render({file_path, wait:false, notes_confirmed:false})`.
    This allocates, uploads and parses the deck.
 3. Keep the returned `request_id`. If the result is `preparing`, poll
@@ -137,6 +142,12 @@ Priority:
 2. Otherwise native speaker notes → use as-is and call out empty slides.
 3. Otherwise draft one short plain-text line per slide from facts actually visible
    on that slide. Never invent chart values or off-slide facts.
+
+PDF carries no speaker notes, so `native_notes` will be empty when the input is a
+PDF. That is expected, not a broken upload. When the deck came from
+content-to-slides, read its `script.md` next to the PDF and map entries to slides
+by `## Slide N` order; treat that as user-supplied narration (priority 1). Do not
+fall back to drafting from slide images alone if that file exists.
 
 Before rendering:
 

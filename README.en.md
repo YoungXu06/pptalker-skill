@@ -45,12 +45,17 @@ Together they form one seamless pipeline:
 How to hand off (both files in the same directory):
 
 ```
-Make a video from content-to-slides-output/<project>/presentation.html,
+Make a video from content-to-slides-output/<project>/output.pdf,
 using script.md in the same folder as the notes, Chinese voiceover
 ```
 
 The agent reads the per-slide narration from `script.md`, maps it to the slides
 in order, and shows it to you for confirmation before rendering.
+
+**Use the PDF, not `presentation.html`.** content-to-slides has already rendered
+the HTML to PDF with images included; uploading the PDF skips the server-side
+page-by-page render (1–5 s per page, and long decks hit the timeout) with the
+same visual result.
 
 ---
 
